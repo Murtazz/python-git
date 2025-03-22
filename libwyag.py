@@ -41,4 +41,4 @@ def main(argv=sys.argv[1:]):
         case "show-ref"     : cmd_show_ref(args) # TODO
         case "status"       : cmd_status(args) # TODO
         case "tag"          : cmd_tag(args) # TODO
-        case _              : print("Bad command.") # TODO
+        case _              : print("Bad command.")
