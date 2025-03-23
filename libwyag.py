@@ -1,7 +1,7 @@
 import argparse
 import configparser
 
-# import grp
+#import grp
 import win32security
 import hashlib
 import os
@@ -17,11 +17,20 @@ from datetime import datetime
 from fnmatch import fnmatch
 from math import ceil
 
+from git_commands import *
+
 argparser = argparse.ArgumentParser(description="The stupidest content tracker")
 
 argsubparsers = argparser.add_subparsers(title="Commands", dest="command")
 argsubparsers.required = True
 
+# init
+argsp = argsubparsers.add_subparsers("init", help="Initialize a new, empty repository.")
+argsp.add_argument("path",
+                    metavar="directory",
+                    nargs="?",
+                    default=".",
+                    help="Where to create the repository.")
 
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
@@ -32,7 +41,7 @@ def main(argv=sys.argv[1:]):
         case "checkout"     : cmd_checkout(args) # TODO
         case "commit"       : cmd_commit(args) # TODO
         case "hash-object"  : cmd_hash_object(args) # TODO
-        case "init"         : cmd_init(args) # TODO
+        case "init"         : cmd_init(args) # TODO ---
         case "log"          : cmd_log(args) # TODO
         case "ls-files"     : cmd_ls_files(args) # TODO
         case "ls-tree"      : cmd_ls_tree(args) # TODO

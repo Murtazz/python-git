@@ -54,7 +54,6 @@ def repo_default_config():
     """ Return a default configuration object """
     settings = configparser.ConfigParser()
 
-
     settings.add_section("core")
     settings.set("core", "repositoryformatversion", "0")
     settings.set("core", "filemode", "false")
