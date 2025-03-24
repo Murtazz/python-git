@@ -21,6 +21,7 @@ class GitRepository:
             self.conf.read([cf])
         elif not force:
             raise FileNotFoundError("Configuration file missing")
+        
         if not force:
             version = int(self.conf.get("core", "repositoryformatversion"))
             if version != 0:
@@ -91,3 +92,22 @@ def repo_create(path):
         config.write(f)
 
     return repo
+
+def repo_find(path=".", required=True):
+    
+    path = os.path.realpath(path)
+    
+    if os.path.isdir(os.path.join(path, ".git")):
+        return GitRepository(path)
+    
+    parent = os.path.realpath(os.path.join(path, ".."))
+    
+    if parent == path:
+        # /.. == /
+        if required:
+            raise Exception("No git directory.")
+        else:
+            return None
+    
+    return repo_find(parent, required)
+
