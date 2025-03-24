@@ -1,1 +1,3 @@
 .vscode/settings.json
+testFolder/
+__pycache__/
