@@ -26,6 +26,18 @@ class GitBlob(GitObject):
     
     def deserialize(self, data):
         self.blobdata = data
+        
+class GitCommit(GitObject):
+    fmt = b'commit'
+    
+    def deserialize(self, data):
+        self.kvlm = kvlm_parse(data)
+        
+    def serialize(self):
+        return kvlm_serialize(self.kvlm)
+    
+    def init(self):
+        self.kvlm = dict()
     
 def object_read(repo, sha):
     """ Read object sha from Git repository repo. Return a 
@@ -89,3 +101,60 @@ def object_hash(fd, fmt, repo=None):
         case _: raise Exception(f"Unknown type {fmt}")
     
     return object_write(obj, repo)
+
+def kvlm_parse(raw, start=0, dct=None):
+    if not dct:
+        dct = dict()
+    
+    spc = raw.find(b' ', start)
+    n1 = raw.find(b'\n', start)
+    
+    # If spc is not found or if spc is found after n1, then n1 is the key
+    if spc < 0 or n1 < spc:
+        assert n1 == start
+        dct[None] = raw[start+1:]
+        return dct
+
+    key = raw[start:spc]
+    
+    # Find the end of the line
+    end = start
+    
+    while True:
+        end = raw.find(b'\n', end+1)
+        if raw[end+1] != ord(' '): break
+        
+    # Grab the value
+    # Also, drop the leading space
+    value = raw[spc+1:end].replace(b'\n ', b'\n')
+    
+    # Dont overwrite existing keys
+    if key in dct:
+        if type(dct[key]) == list:
+            dct[key].append(value)
+        else:
+            dct[key] = [ dct[key], value ]
+    else:
+        dct[key] = value
+    
+    return kvlm_parse(raw, start=end+1, dct=dct)
+
+def kvlm_serialize(kvlm):
+    ret = b''
+    
+    # output fields
+    for k in kvlm.keys():
+        # Skip the null key
+        if k == None: continue
+        
+        val = kvlm[k]
+        
+        # Normalize to a list
+        if type(val) != list:
+            val = [ val ]
+        
+        for v in val:
+            ret += k + b' ' + v.replace(b'\n', b'\n ') + b'\n'
+    
+    ret += '\n' + kvlm[None]
+    return ret

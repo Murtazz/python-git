@@ -1,3 +1,4 @@
 .vscode/settings.json
 testFolder/
 __pycache__/
+.DS_Store
