@@ -59,6 +59,49 @@ argsp.add_argument("commit",
                     nargs="?",
                     help="Commit to start at.")
 
+# ls-tree
+argsp = argsubparsers.add_parser("ls-tree", help="Pretty-print a tree object")
+argsp.add_argument("-r",
+                    dest="recursive",
+                    action="store_true",
+                    help="Recurse into sub-trees")
+argsp.add_argument("tree",
+                   help="A tree-ish object.")
+
+# checkout
+argsp = argsubparsers.add_parser("checkout", help="Checkout a commit inside of a directory.")
+
+argsp.add_argument("commit",
+                   help="The commit or tree to checkout.")
+argsp.add_argument("path",
+                   help="The EMPTY directoy to checkout on.")
+
+# show ref
+argsp = argsubparsers.add_parser("show-ref", help="List References")
+
+# tag
+argsp = argsubparsers.add_parser("tag", help="List and create tags")
+
+argsp.add_argument("-a", action="store_true", dest="create_tag_object", help="Create an annotated tag")
+
+argsp.add_argument("name", nargs="?", help="The new tag's name")
+
+argsp.add_argument("object", default="HEAD", nargs="?", help="The object the new tag will point to")
+
+# rev-parse
+argsp = argsubparsers.add_parser(
+    "rev-parse",
+    help="Parse revision (or other objects) identifiers")
+
+argsp.add_argument("--wyag-type",
+                    metavar="type",
+                    dest="type",
+                    choices=["commit", "tree", "tag", "blob"],
+                    default=None,
+                    help="Specify the expected type")
+
+argsp.add_argument("name", help="The name to parse")
+
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
     match args.command:
