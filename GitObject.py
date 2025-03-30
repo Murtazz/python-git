@@ -3,6 +3,7 @@ import hashlib
 import os
 import re
 from GitRepository import repo_file
+from git_commands import ref_resolve
 
 class GitObject:
     def __init__(self, data=None):
@@ -104,6 +105,14 @@ class GitIndex(object):
         self.version = version
         self.entries = entries
         
+class GitIgnore(object):
+    absolute = None
+    scoped = None
+
+    def __init__(self, absolute, scoped):
+        self.absolute = absolute
+        self.scoped = scoped
+        
 # --------------------- object helpers ---------------------
 def object_read(repo, sha):
     """ Read object sha from Git repository repo. Return a 
@@ -151,9 +160,40 @@ def object_write(obj, repo=None):
                 f.write(zlib.compress(result))
     return sha
 
-# TODO
 def object_find(repo, name, fmt=None, follow=True):
-    return name
+    sha = object_resolve(repo, name)
+
+    if not sha:
+        raise Exception(f"No such reference {name}.")
+
+    if len(sha) > 1:
+        raise Exception("Ambiguous reference {name}: Candidates are:\n - {'\n - '.join(sha)}.")
+
+    sha = sha[0]
+
+    if not fmt:
+        return sha
+
+    while True:
+        obj = object_read(repo, sha)
+        #     ^^^^^^^^^^^ < this is a bit agressive: we're reading
+        # the full object just to get its type.  And we're doing
+        # that in a loop, albeit normally short.  Don't expect
+        # high performance here.
+
+        if obj.fmt == fmt:
+            return sha
+
+        if not follow:
+            return None
+
+        # Follow tags
+        if obj.fmt == b'tag':
+            sha = obj.kvlm[b'object'].decode("ascii")
+        elif obj.fmt == b'commit' and fmt == b'tree':
+            sha = obj.kvlm[b'tree'].decode("ascii")
+        else:
+            return None
 
 def object_resolve(repo, name):
     """ Resolve name to an object hash in repo.
@@ -196,37 +236,6 @@ def object_resolve(repo, name):
         candidates.append(as_branch)
     
     return candidates
-
-def object_find(repo, name, fmt=None, follow=True):
-    sha = object_resolve(repo, name)
-    
-    if not sha:
-        raise Exception(f"No such reference {name}.")
-    
-    if len(sha) > 1:
-        raise Exception(f"Ambiguous reference {name}: Candidates are:\n - {'\n - '.join(sha)}.")
-    
-    sha = sha[0]
-    
-    if not fmt:
-        return sha
-    
-    while True:
-        obj = object_read(repo, sha)
-        
-        if obj.fmt == fmt:
-            return sha
-        
-        if not follow:
-            return None
-        
-        # Follow tags
-        if obj.fmt == b'tag':
-            sha = obj.kvlm[b'object'].decode('ascii')
-        elif obj.fmt == b'commit' and fmt == b'tree':
-            sha = obj.kvlm[b'tree'].decode('ascii')
-        else:
-            return None
         
 def object_hash(fd, fmt, repo=None):
     """ Hash object, writing it to repo if provided."""

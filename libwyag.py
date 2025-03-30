@@ -1,14 +1,5 @@
 import argparse
-import configparser
-import grp
-import pwd
-import getpass
-import re
 import sys
-import zlib
-from datetime import datetime
-from fnmatch import fnmatch
-from math import ceil
 
 from git_commands import *
 
@@ -93,6 +84,14 @@ argsp = argsubparsers.add_parser(
     "rev-parse",
     help="Parse revision (or other objects) identifiers")
 
+# ls-files
+argsp = argsubparsers.add_parser("ls-files", help = "List all the stage files")
+argsp.add_argument("--verbose", action="store_true", help="Show everything.")
+
+# check-ignore
+argsp = argsubparsers.add_parser("check-ignore", help = "Check path(s) against ignore rules.")
+argsp.add_argument("path", nargs="+", help="Paths to check")
+
 argsp.add_argument("--wyag-type",
                     metavar="type",
                     dest="type",
@@ -102,22 +101,41 @@ argsp.add_argument("--wyag-type",
 
 argsp.add_argument("name", help="The name to parse")
 
+# status
+argsp = argsubparsers.add_parser("status", help = "Show the working tree status.")
+
+# rm
+argsp = argsubparsers.add_parser("rm", help="Remove files from the working tree and the index.")
+argsp.add_argument("path", nargs="+", help="Files to remove")
+
+# add
+argsp = argsubparsers.add_parser("add", help = "Add files contents to the index.")
+argsp.add_argument("path", nargs="+", help="Files to add")
+
+# commit
+argsp = argsubparsers.add_parser("commit", help="Record changes to the repository.")
+argsp.add_argument("-m",
+                   metavar="message",
+                   dest="message",
+                   help="Message to associate with this commit.")
+
+
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
     match args.command:
-        # case "add"          : cmd_add(args) # TODO
+        case "add"          : cmd_add(args)
         case "cat-file"     : cmd_cat_file(args)
-        # case "check-ignore" : cmd_check_ignore(args) # TODO
-        # case "checkout"     : cmd_checkout(args) # TODO
-        # case "commit"       : cmd_commit(args) # TODO
+        case "check-ignore" : cmd_check_ignore(args)
+        case "checkout"     : cmd_checkout(args)
+        case "commit"       : cmd_commit(args)
         case "hash-object"  : cmd_hash_object(args)
         case "init"         : cmd_init(args)
-        # case "log"          : cmd_log(args) # TODO
-        # case "ls-files"     : cmd_ls_files(args) # TODO
-        # case "ls-tree"      : cmd_ls_tree(args) # TODO
-        # case "rev-parse"    : cmd_rev_parse(args) # TODO
-        # case "rm"           : cmd_rm(args) # TODO
-        # case "show-ref"     : cmd_show_ref(args) # TODO
-        # case "status"       : cmd_status(args) # TODO
-        # case "tag"          : cmd_tag(args) # TODO
+        case "log"          : cmd_log(args)
+        case "ls-files"     : cmd_ls_files(args)
+        case "ls-tree"      : cmd_ls_tree(args)
+        case "rev-parse"    : cmd_rev_parse(args)
+        case "rm"           : cmd_rm(args)
+        case "show-ref"     : cmd_show_ref(args)
+        case "status"       : cmd_status(args)
+        case "tag"          : cmd_tag(args)
         case _              : print("Bad command.")
